@@ -61,6 +61,31 @@ class FilmControllerTest {
     }
 
     @Test
+    void createFilmWithBlankDescription() {
+        Film film = createTestFilm();
+        film.setDescription("   ");
+
+        Film createdFilm = filmController.create(film);
+        assertNotNull(createdFilm.getId());
+    }
+
+    @Test
+    void updateFilmWithPartialData() {
+        Film film = createTestFilm();
+        Film createdFilm = filmController.create(film);
+
+        Film updateFilm = new Film();
+        updateFilm.setId(createdFilm.getId());
+        updateFilm.setName("Фильм2");
+
+        Film updatedFilm = filmController.update(updateFilm);
+
+        assertEquals("Фильм2", updatedFilm.getName());
+        assertEquals("Описание", updatedFilm.getDescription());
+        assertEquals(120, updatedFilm.getDuration());
+    }
+
+    @Test
     void createFilmWithExactCinemaBirthday() {
         Film film = createTestFilm();
         film.setReleaseDate(LocalDate.of(1895, 12, 28));

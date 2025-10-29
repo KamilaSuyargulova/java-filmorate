@@ -41,10 +41,25 @@ public class FilmController {
         if (film.getId() == null || !films.containsKey(film.getId())) {
             throw new ValidationException("Фильм с id=" + film.getId() + " не найден");
         }
-        validateFilm(film);
-        films.put(film.getId(), film);
-        log.info("Обновлен фильм: {}", film);
-        return film;
+
+        validateFilmForUpdate(film);
+
+        Film existingFilm = films.get(film.getId());
+        if (film.getName() != null) {
+            existingFilm.setName(film.getName());
+        }
+        if (film.getDescription() != null) {
+            existingFilm.setDescription(film.getDescription());
+        }
+        if (film.getReleaseDate() != null) {
+            existingFilm.setReleaseDate(film.getReleaseDate());
+        }
+        if (film.getDuration() != 0) {
+            existingFilm.setDuration(film.getDuration());
+        }
+
+        log.info("Обновлен фильм: {}", existingFilm);
+        return existingFilm;
     }
 
     private void validateFilm(Film film) {
@@ -61,6 +76,21 @@ public class FilmController {
             throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
         }
         if (film.getDuration() <= 0) {
+            throw new ValidationException("Продолжительность фильма должна быть положительным числом");
+        }
+    }
+
+    private void validateFilmForUpdate(Film film) {
+        if (film.getName() != null && film.getName().isBlank()) {
+            throw new ValidationException("Название не может быть пустым");
+        }
+        if (film.getDescription() != null && film.getDescription().length() > 200) {
+            throw new ValidationException("Максимальная длина описания — 200 символов");
+        }
+        if (film.getReleaseDate() != null && film.getReleaseDate().isBefore(CINEMA_BIRTHDAY)) {
+            throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
+        }
+        if (film.getDuration() < 0) {
             throw new ValidationException("Продолжительность фильма должна быть положительным числом");
         }
     }

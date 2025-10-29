@@ -32,6 +32,22 @@ class UserControllerTest {
     }
 
     @Test
+    void updateUserWithPartialData() {
+        User user = createTestUser();
+        User createdUser = userController.create(user);
+
+        User updateUser = new User();
+        updateUser.setId(createdUser.getId());
+        updateUser.setEmail("new@example.com");
+
+        User updatedUser = userController.update(updateUser);
+
+        assertEquals("new@example.com", updatedUser.getEmail());
+        assertEquals("testlogin", updatedUser.getLogin());
+        assertEquals("testlogin", updatedUser.getName());
+    }
+
+    @Test
     void createUserWithName() {
         User user = createTestUser();
         user.setName("Имя");
@@ -45,6 +61,17 @@ class UserControllerTest {
     void createUserWithEmptyEmail() {
         User user = createTestUser();
         user.setEmail("");
+
+        ValidationException exception = assertThrows(ValidationException.class,
+                () -> userController.create(user));
+        assertEquals("Электронная почта не может быть пустой и должна содержать символ @",
+                exception.getMessage());
+    }
+
+    @Test
+    void createUserWithInvalidEmailFormat() {
+        User user = createTestUser();
+        user.setEmail("invalid-email-format");
 
         ValidationException exception = assertThrows(ValidationException.class,
                 () -> userController.create(user));
