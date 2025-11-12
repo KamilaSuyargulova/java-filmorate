@@ -43,6 +43,7 @@ class UserControllerTest {
         User updateUser = new User();
         updateUser.setId(createdUser.getId());
         updateUser.setEmail("new@example.com");
+        updateUser.setLogin("testlogin");
 
         User updatedUser = userController.update(updateUser);
 
@@ -183,6 +184,25 @@ class UserControllerTest {
         assertEquals(1, userController.getCommonFriends(createdUser1.getId(), createdUser2.getId()).size());
         assertEquals(createdCommonFriend.getId(),
                 userController.getCommonFriends(createdUser1.getId(), createdUser2.getId()).get(0).getId());
+    }
+
+    @Test
+    void addFriendWithNonExistentUser() {
+        User user = createTestUser();
+        User createdUser = userController.create(user);
+
+        ru.yandex.practicum.filmorate.exception.NotFoundException exception =
+                assertThrows(ru.yandex.practicum.filmorate.exception.NotFoundException.class,
+                        () -> userController.addFriend(createdUser.getId(), 999L));
+        assertEquals("Пользователь с id=999 не найден", exception.getMessage());
+    }
+
+    @Test
+    void addFriendWhereFirstUserNonExistent() {
+        ru.yandex.practicum.filmorate.exception.NotFoundException exception =
+                assertThrows(ru.yandex.practicum.filmorate.exception.NotFoundException.class,
+                        () -> userController.addFriend(999L, 1L));
+        assertEquals("Пользователь с id=999 не найден", exception.getMessage());
     }
 
     private User createTestUser() {

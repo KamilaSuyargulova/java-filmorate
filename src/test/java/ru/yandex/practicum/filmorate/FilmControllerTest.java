@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
 
@@ -15,11 +16,13 @@ import static org.junit.jupiter.api.Assertions.*;
 class FilmControllerTest {
 
     private FilmController filmController;
+    private InMemoryUserStorage userStorage;
 
     @BeforeEach
     void setUp() {
         InMemoryFilmStorage filmStorage = new InMemoryFilmStorage();
-        FilmService filmService = new FilmService(filmStorage);
+        userStorage = new InMemoryUserStorage();
+        FilmService filmService = new FilmService(filmStorage, userStorage);
         filmController = new FilmController(filmService);
     }
 
@@ -81,6 +84,8 @@ class FilmControllerTest {
         Film updateFilm = new Film();
         updateFilm.setId(createdFilm.getId());
         updateFilm.setName("Фильм2");
+        updateFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
+        updateFilm.setDuration(120);
 
         Film updatedFilm = filmController.update(updateFilm);
 
@@ -160,6 +165,55 @@ class FilmControllerTest {
         filmController.create(film2);
 
         assertEquals(2, filmController.findAll().size());
+    }
+
+    @Test
+    void addLikeWithNonExistentUser() {
+        Film film = createTestFilm();
+        Film createdFilm = filmController.create(film);
+
+        ru.yandex.practicum.filmorate.exception.NotFoundException exception =
+                assertThrows(ru.yandex.practicum.filmorate.exception.NotFoundException.class,
+                        () -> filmController.addLike(createdFilm.getId(), 999L));
+        assertEquals("Пользователь с id=999 не найден", exception.getMessage());
+    }
+
+    @Test
+    void removeLikeWithNonExistentUser() {
+        Film film = createTestFilm();
+        Film createdFilm = filmController.create(film);
+
+        ru.yandex.practicum.filmorate.exception.NotFoundException exception =
+                assertThrows(ru.yandex.practicum.filmorate.exception.NotFoundException.class,
+                        () -> filmController.removeLike(createdFilm.getId(), 999L));
+        assertEquals("Пользователь с id=999 не найден", exception.getMessage());
+    }
+
+    @Test
+    void addLikeWithNonExistentFilm() {
+        ru.yandex.practicum.filmorate.exception.NotFoundException exception =
+                assertThrows(ru.yandex.practicum.filmorate.exception.NotFoundException.class,
+                        () -> filmController.addLike(999L, 1L));
+        assertEquals("Фильм с id=999 не найден", exception.getMessage());
+    }
+
+    @Test
+    void addAndRemoveLike() {
+        // Сначала создаем пользователя
+        ru.yandex.practicum.filmorate.model.User user = new ru.yandex.practicum.filmorate.model.User();
+        user.setEmail("test@example.com");
+        user.setLogin("testuser");
+        user.setBirthday(LocalDate.of(1990, 1, 1));
+        userStorage.create(user);
+
+        Film film = createTestFilm();
+        Film createdFilm = filmController.create(film);
+
+        // Добавляем лайк
+        filmController.addLike(createdFilm.getId(), user.getId());
+
+        // Удаляем лайк
+        filmController.removeLike(createdFilm.getId(), user.getId());
     }
 
     private Film createTestFilm() {
