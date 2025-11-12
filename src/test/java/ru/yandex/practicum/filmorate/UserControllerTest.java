@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
 
@@ -16,7 +18,9 @@ class UserControllerTest {
 
     @BeforeEach
     void setUp() {
-        userController = new UserController();
+        InMemoryUserStorage userStorage = new InMemoryUserStorage();
+        UserService userService = new UserService(userStorage);
+        userController = new UserController(userService);
     }
 
     @Test
@@ -129,6 +133,56 @@ class UserControllerTest {
         userController.create(user2);
 
         assertEquals(2, userController.findAll().size());
+    }
+
+    @Test
+    void findUserById() {
+        User user = createTestUser();
+        User createdUser = userController.create(user);
+
+        User foundUser = userController.findById(createdUser.getId());
+
+        assertNotNull(foundUser);
+        assertEquals(createdUser.getId(), foundUser.getId());
+        assertEquals("test@example.com", foundUser.getEmail());
+    }
+
+    @Test
+    void addAndGetFriends() {
+        User user1 = createTestUser();
+        User user2 = createTestUser();
+        user2.setEmail("friend@example.com");
+        user2.setLogin("friend");
+
+        User createdUser1 = userController.create(user1);
+        User createdUser2 = userController.create(user2);
+
+        userController.addFriend(createdUser1.getId(), createdUser2.getId());
+
+        assertEquals(1, userController.getFriends(createdUser1.getId()).size());
+        assertEquals(createdUser2.getId(), userController.getFriends(createdUser1.getId()).get(0).getId());
+    }
+
+    @Test
+    void getCommonFriends() {
+        User user1 = createTestUser();
+        User user2 = createTestUser();
+        user2.setEmail("user2@example.com");
+        user2.setLogin("user2");
+        User commonFriend = createTestUser();
+        commonFriend.setEmail("common@example.com");
+        commonFriend.setLogin("common");
+
+        User createdUser1 = userController.create(user1);
+        User createdUser2 = userController.create(user2);
+        User createdCommonFriend = userController.create(commonFriend);
+
+        userController.addFriend(createdUser1.getId(), createdCommonFriend.getId());
+        userController.addFriend(createdUser2.getId(), createdCommonFriend.getId());
+
+        assertEquals(1, userController.getCommonFriends(createdUser1.getId(), createdUser2.getId()).size());
+        assertEquals(createdCommonFriend.getId(),
+                userController.getCommonFriends(createdUser1.getId(), createdUser2.getId()).get(0).getId());
     }
 
     private User createTestUser() {

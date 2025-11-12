@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
 
 import java.time.LocalDate;
 
@@ -16,7 +18,9 @@ class FilmControllerTest {
 
     @BeforeEach
     void setUp() {
-        filmController = new FilmController();
+        InMemoryFilmStorage filmStorage = new InMemoryFilmStorage();
+        FilmService filmService = new FilmService(filmStorage);
+        filmController = new FilmController(filmService);
     }
 
     @Test
@@ -132,6 +136,30 @@ class FilmControllerTest {
         ValidationException exception = assertThrows(ValidationException.class,
                 () -> filmController.create(film));
         assertEquals("Продолжительность фильма должна быть положительным числом", exception.getMessage());
+    }
+
+    @Test
+    void findFilmById() {
+        Film film = createTestFilm();
+        Film createdFilm = filmController.create(film);
+
+        Film foundFilm = filmController.findById(createdFilm.getId());
+
+        assertNotNull(foundFilm);
+        assertEquals(createdFilm.getId(), foundFilm.getId());
+        assertEquals("Фильм", foundFilm.getName());
+    }
+
+    @Test
+    void getAllFilms() {
+        Film film1 = createTestFilm();
+        Film film2 = createTestFilm();
+        film2.setName("Фильм2");
+
+        filmController.create(film1);
+        filmController.create(film2);
+
+        assertEquals(2, filmController.findAll().size());
     }
 
     private Film createTestFilm() {
