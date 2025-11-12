@@ -40,13 +40,42 @@ public class InMemoryUserStorage implements UserStorage {
             throw new ValidationException("Пользователь с id=" + user.getId() + " не найден");
         }
 
-        validateUser(user);
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
+        User existingUser = users.get(user.getId());
+
+        if (user.getEmail() != null) {
+            if (user.getEmail().isBlank() || !user.getEmail().contains("@")) {
+                throw new ValidationException("Электронная почта не может быть пустой и должна содержать символ @");
+            }
+            existingUser.setEmail(user.getEmail());
         }
-        users.put(user.getId(), user);
-        log.info("Обновлен пользователь: {}", user);
-        return user;
+
+        if (user.getLogin() != null) {
+            if (user.getLogin().isBlank()) {
+                throw new ValidationException("Логин не может быть пустым");
+            }
+            if (user.getLogin().contains(" ")) {
+                throw new ValidationException("Логин не может содержать пробелы");
+            }
+            existingUser.setLogin(user.getLogin());
+        }
+
+        if (user.getName() != null) {
+            existingUser.setName(user.getName());
+        }
+
+        if (user.getBirthday() != null) {
+            if (user.getBirthday().isAfter(LocalDate.now())) {
+                throw new ValidationException("Дата рождения не может быть в будущем");
+            }
+            existingUser.setBirthday(user.getBirthday());
+        }
+
+        if (existingUser.getName() == null || existingUser.getName().isBlank()) {
+            existingUser.setName(existingUser.getLogin());
+        }
+
+        log.info("Обновлен пользователь: {}", existingUser);
+        return existingUser;
     }
 
     @Override

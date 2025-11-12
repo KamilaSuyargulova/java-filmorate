@@ -38,10 +38,38 @@ public class InMemoryFilmStorage implements FilmStorage {
             throw new ValidationException("Фильм с id=" + film.getId() + " не найден");
         }
 
-        validateFilm(film);
-        films.put(film.getId(), film);
-        log.info("Обновлен фильм: {}", film);
-        return film;
+        Film existingFilm = films.get(film.getId());
+
+        if (film.getName() != null) {
+            if (film.getName().isBlank()) {
+                throw new ValidationException("Название не может быть пустым");
+            }
+            existingFilm.setName(film.getName());
+        }
+
+        if (film.getDescription() != null) {
+            if (film.getDescription().length() > 200) {
+                throw new ValidationException("Максимальная длина описания — 200 символов");
+            }
+            existingFilm.setDescription(film.getDescription());
+        }
+
+        if (film.getReleaseDate() != null) {
+            if (film.getReleaseDate().isBefore(CINEMA_BIRTHDAY)) {
+                throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
+            }
+            existingFilm.setReleaseDate(film.getReleaseDate());
+        }
+
+        if (film.getDuration() != 0) {
+            if (film.getDuration() <= 0) {
+                throw new ValidationException("Продолжительность фильма должна быть положительным числом");
+            }
+            existingFilm.setDuration(film.getDuration());
+        }
+
+        log.info("Обновлен фильм: {}", existingFilm);
+        return existingFilm;
     }
 
     @Override
