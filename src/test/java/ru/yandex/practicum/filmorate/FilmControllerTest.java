@@ -84,8 +84,6 @@ class FilmControllerTest {
         Film updateFilm = new Film();
         updateFilm.setId(createdFilm.getId());
         updateFilm.setName("Фильм2");
-        updateFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
-        updateFilm.setDuration(120);
 
         Film updatedFilm = filmController.update(updateFilm);
 

@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.*;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.time.LocalDate;
 import java.util.*;
 
 @Slf4j
@@ -23,7 +22,6 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public User create(User user) {
         log.info("Получен запрос на добавление пользователя: {}", user);
-        validateUser(user);
         user.setId(idCounter++);
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
@@ -39,43 +37,12 @@ public class InMemoryUserStorage implements UserStorage {
         if (user.getId() == null || !users.containsKey(user.getId())) {
             throw new NotFoundException("Пользователь с id=" + user.getId() + " не найден");
         }
-
-        User existingUser = users.get(user.getId());
-
-        if (user.getEmail() != null) {
-            if (user.getEmail().isBlank() || !user.getEmail().contains("@")) {
-                throw new ValidationException("Электронная почта не может быть пустой и должна содержать символ @");
-            }
-            existingUser.setEmail(user.getEmail());
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
         }
-
-        if (user.getLogin() != null) {
-            if (user.getLogin().isBlank()) {
-                throw new ValidationException("Логин не может быть пустым");
-            }
-            if (user.getLogin().contains(" ")) {
-                throw new ValidationException("Логин не может содержать пробелы");
-            }
-            existingUser.setLogin(user.getLogin());
-        }
-
-        if (user.getName() != null) {
-            existingUser.setName(user.getName());
-        }
-
-        if (user.getBirthday() != null) {
-            if (user.getBirthday().isAfter(LocalDate.now())) {
-                throw new ValidationException("Дата рождения не может быть в будущем");
-            }
-            existingUser.setBirthday(user.getBirthday());
-        }
-
-        if (existingUser.getName() == null || existingUser.getName().isBlank()) {
-            existingUser.setName(existingUser.getLogin());
-        }
-
-        log.info("Обновлен пользователь: {}", existingUser);
-        return existingUser;
+        users.put(user.getId(), user);
+        log.info("Обновлен пользователь: {}", user);
+        return user;
     }
 
     @Override
@@ -91,20 +58,5 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public boolean existsById(Long id) {
         return users.containsKey(id);
-    }
-
-    private void validateUser(User user) {
-        if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
-            throw new ValidationException("Электронная почта не может быть пустой и должна содержать символ @");
-        }
-        if (user.getLogin() == null || user.getLogin().isBlank()) {
-            throw new ValidationException("Логин не может быть пустым");
-        }
-        if (user.getLogin().contains(" ")) {
-            throw new ValidationException("Логин не может содержать пробелы");
-        }
-        if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
-            throw new ValidationException("Дата рождения не может быть в будущем");
-        }
     }
 }
