@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -60,8 +61,12 @@ public class UserService {
         User user = findById(userId);
         User friend = findById(friendId);
 
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
+        user.getFriends().put(friendId, FriendshipStatus.PENDING);
+
+        if (friend.getFriends().containsKey(userId)) {
+            user.getFriends().put(friendId, FriendshipStatus.CONFIRMED);
+            friend.getFriends().put(userId, FriendshipStatus.CONFIRMED);
+        }
 
         userStorage.update(user);
         userStorage.update(friend);
@@ -76,6 +81,11 @@ public class UserService {
         user.getFriends().remove(friendId);
         friend.getFriends().remove(userId);
 
+        if (friend.getFriends().containsKey(userId) &&
+                friend.getFriends().get(userId) == FriendshipStatus.CONFIRMED) {
+            friend.getFriends().put(userId, FriendshipStatus.PENDING);
+        }
+
         userStorage.update(user);
         userStorage.update(friend);
 
@@ -84,7 +94,7 @@ public class UserService {
 
     public List<User> getFriends(Long userId) {
         User user = findById(userId);
-        return user.getFriends().stream()
+        return user.getFriends().keySet().stream()
                 .map(this::findById)
                 .collect(Collectors.toList());
     }
@@ -93,8 +103,8 @@ public class UserService {
         User user = findById(userId);
         User other = findById(otherId);
 
-        Set<Long> commonFriendIds = new HashSet<>(user.getFriends());
-        commonFriendIds.retainAll(other.getFriends()); // Используем retainAll для поиска общих друзей
+        Set<Long> commonFriendIds = new HashSet<>(user.getFriends().keySet());
+        commonFriendIds.retainAll(other.getFriends().keySet()); // Используем retainAll для поиска общих друзей
 
         return commonFriendIds.stream()
                 .map(this::findById)

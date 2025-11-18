@@ -6,11 +6,14 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MpaRating;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -99,5 +102,45 @@ public class FilmService {
             throw new ValidationException("Продолжительность фильма должна быть" +
                     " положительным числом");
         }
+    }
+
+    public void addGenreToFilm(Long filmId, Genre genre) {
+        Film film = findById(filmId);
+        if (film == null) {
+            throw new NotFoundException("Фильм с id=" + filmId + " не найден");
+        }
+        film.getGenres().add(genre);
+    }
+
+    public void removeGenreFromFilm(Long filmId, Genre genre) {
+        Film film = findById(filmId);
+        if (film == null) {
+            throw new NotFoundException("Фильм с id=" + filmId + " не найден");
+        }
+        film.getGenres().remove(genre);
+    }
+
+    public Set<Genre> getFilmGenres(Long filmId) {
+        Film film = findById(filmId);
+        if (film == null) {
+            throw new NotFoundException("Фильм с id=" + filmId + " не найден");
+        }
+        return film.getGenres();
+    }
+
+    public void setFilmMpa(Long filmId, MpaRating mpa) {
+        Film film = findById(filmId);
+        if (film == null) {
+            throw new NotFoundException("Фильм с id=" + filmId + " не найден");
+        }
+        film.setMpa(mpa);
+    }
+
+    public MpaRating getFilmMpa(Long filmId) {
+        Film film = findById(filmId);
+        if (film == null) {
+            throw new NotFoundException("Фильм с id=" + filmId + " не найден");
+        }
+        return film.getMpa();
     }
 }

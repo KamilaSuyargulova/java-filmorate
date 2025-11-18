@@ -4,8 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
 
 @Getter
 @Setter
@@ -15,5 +15,5 @@ public class User {
     private String login;
     private String name;
     private LocalDate birthday;
-    private Set<Long> friends = new HashSet<>();
+    private Map<Long, FriendshipStatus> friends = new HashMap<>();
 }
