@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -81,21 +82,21 @@ public class FilmService {
 
     private void validateFilm(Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
-            throw new ru.yandex.practicum.filmorate.exception.ValidationException("Название не может быть пустым");
+            throw new ValidationException("Название не может быть пустым");
         }
         if (film.getDescription() != null && film.getDescription().length() > 200) {
-            throw new ru.yandex.practicum.filmorate.exception.ValidationException("Максимальная длина описания — " +
+            throw new ValidationException("Максимальная длина описания — " +
                     "200 символов");
         }
         if (film.getReleaseDate() == null) {
-            throw new ru.yandex.practicum.filmorate.exception.ValidationException("Дата релиза обязательна");
+            throw new ValidationException("Дата релиза обязательна");
         }
         if (film.getReleaseDate().isBefore(java.time.LocalDate.of(1895, 12, 28))) {
-            throw new ru.yandex.practicum.filmorate.exception.ValidationException("Дата релиза не может быть раньше " +
+            throw new ValidationException("Дата релиза не может быть раньше " +
                     "28 декабря 1895 года");
         }
         if (film.getDuration() <= 0) {
-            throw new ru.yandex.practicum.filmorate.exception.ValidationException("Продолжительность фильма должна быть" +
+            throw new ValidationException("Продолжительность фильма должна быть" +
                     " положительным числом");
         }
     }
