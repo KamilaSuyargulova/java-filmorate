@@ -26,26 +26,28 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
 
     private static final String FIND_ALL_SQL = "SELECT * FROM films";
     private static final String FIND_BY_ID_SQL = "SELECT * FROM films WHERE id = ?";
-    private static final String INSERT_SQL = "INSERT INTO films (name, description, release_date, duration, mpa_rating_id) VALUES (?, ?, ?, ?, ?)";
-    private static final String UPDATE_SQL = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, mpa_rating_id = ? WHERE id = ?";
+    private static final String INSERT_SQL = "INSERT INTO films (name, description, release_date, duration, " +
+            "mpa_rating_id) VALUES (?, ?, ?, ?, ?)";
+    private static final String UPDATE_SQL = "UPDATE films SET name = ?, description = ?, release_date = ?, " +
+            "duration = ?, mpa_rating_id = ? WHERE id = ?";
     private static final String DELETE_SQL = "DELETE FROM films WHERE id = ?";
     private static final String EXISTS_BY_ID_SQL = "SELECT COUNT(*) FROM films WHERE id = ?";
     private static final String ADD_LIKE_SQL = "INSERT INTO likes (film_id, user_id) VALUES (?, ?)";
     private static final String REMOVE_LIKE_SQL = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
     private static final String GET_LIKES_SQL = "SELECT user_id FROM likes WHERE film_id = ?";
     private static final String GET_POPULAR_SQL = """
-            SELECT f.*, COUNT(l.user_id) as likes_count 
-            FROM films f 
-            LEFT JOIN likes l ON f.id = l.film_id 
-            GROUP BY f.id 
-            ORDER BY likes_count DESC 
+            SELECT f.*, COUNT(l.user_id) as likes_count
+            FROM films f
+            LEFT JOIN likes l ON f.id = l.film_id
+            GROUP BY f.id
+            ORDER BY likes_count DESC
             LIMIT ?
             """;
     private static final String ADD_GENRE_SQL = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
     private static final String REMOVE_GENRES_SQL = "DELETE FROM film_genres WHERE film_id = ?";
     private static final String GET_FILM_GENRES_SQL = """
-            SELECT g.* FROM genres g 
-            JOIN film_genres fg ON g.id = fg.genre_id 
+            SELECT g.* FROM genres g
+            JOIN film_genres fg ON g.id = fg.genre_id
             WHERE fg.film_id = ?
             """;
 
@@ -193,8 +195,8 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private Set<Genre> getFilmGenres(Long filmId) {
         try {
             String sql = """
-                    SELECT g.* FROM genres g 
-                    JOIN film_genres fg ON g.id = fg.genre_id 
+                    SELECT g.* FROM genres g
+                    JOIN film_genres fg ON g.id = fg.genre_id
                     WHERE fg.film_id = ?
                     ORDER BY g.id ASC
                     """;
@@ -210,9 +212,9 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private MpaRating getFilmMpa(Long filmId) {
         try {
             String sql = """
-                    SELECT m.id, m.name, m.description 
-                    FROM films f 
-                    JOIN mpa_ratings m ON f.mpa_rating_id = m.id 
+                    SELECT m.id, m.name, m.description
+                    FROM films f
+                    JOIN mpa_ratings m ON f.mpa_rating_id = m.id
                     WHERE f.id = ?
                     """;
             return jdbcTemplate.queryForObject(sql, mpaRatingRowMapper, filmId);
