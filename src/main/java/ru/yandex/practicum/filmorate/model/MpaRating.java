@@ -1,25 +1,20 @@
 package ru.yandex.practicum.filmorate.model;
 
-public enum MpaRating {
-    G("G", "у фильма нет возрастных ограничений"),
-    PG("PG", "детям рекомендуется смотреть фильм с родителями"),
-    PG_13("PG-13", "детям до 13 лет просмотр не желателен"),
-    R("R", "лицам до 17 лет просматривать фильм можно только в присутствии взрослого"),
-    NC_17("NC-17", "лицам до 18 лет просмотр запрещён");
+import lombok.Getter;
+import lombok.Setter;
 
-    private final String code;
-    private final String description;
+@Getter
+@Setter
+public class MpaRating {
+    private Long id;
+    private String name;
+    private String description;
 
-    MpaRating(String code, String description) {
-        this.code = code;
-        this.description = description;
+    public MpaRating() {
     }
 
-    public String getCode() {
-        return code;
-    }
-
-    public String getDescription() {
-        return description;
+    public MpaRating(Long id, String name) {
+        this.id = id;
+        this.name = name;
     }
 }

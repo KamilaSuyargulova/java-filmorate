@@ -2,10 +2,11 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
+
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -33,33 +34,32 @@ public class UserController {
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public User create(@RequestBody User user) {
-        log.info("Получен запрос на добавление пользователя: {}", user);
+    public User create(@Valid @RequestBody User user) {
+        log.info("Получен запрос на создание пользователя: {}", user);
         return userService.create(user);
     }
 
     @PutMapping
-    public User update(@RequestBody User user) {
+    public User update(@Valid @RequestBody User user) {
         log.info("Получен запрос на обновление пользователя: {}", user);
         return userService.update(user);
     }
 
     @PutMapping("/{id}/friends/{friendId}")
     public void addFriend(@PathVariable Long id, @PathVariable Long friendId) {
-        log.info("Получен запрос на добавление в друзья: пользователь {} добавляет пользователя {}", id, friendId);
+        log.info("Получен запрос на добавление друга {} пользователю {}", friendId, id);
         userService.addFriend(id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
     public void removeFriend(@PathVariable Long id, @PathVariable Long friendId) {
-        log.info("Получен запрос на удаление из друзей: пользователь {} удаляет пользователя {}", id, friendId);
+        log.info("Получен запрос на удаление друга {} у пользователя {}", friendId, id);
         userService.removeFriend(id, friendId);
     }
 
     @GetMapping("/{id}/friends")
     public List<User> getFriends(@PathVariable Long id) {
-        log.info("Получен запрос на получение списка друзей пользователя {}", id);
+        log.info("Получен запрос на получение друзей пользователя с id={}", id);
         return userService.getFriends(id);
     }
 

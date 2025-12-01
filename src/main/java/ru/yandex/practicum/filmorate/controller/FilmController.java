@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
+import jakarta.validation.Valid;
+
 import java.util.List;
 
 @Slf4j
@@ -35,12 +37,19 @@ public class FilmController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Film create(@RequestBody Film film) {
-        log.info("Получен запрос на добавление фильма: {}", film);
-        return filmService.create(film);
+        if (film.getMpa() != null) {
+            log.info("MPA id: {}, name: {}", film.getMpa().getId(), film.getMpa().getName());
+        }
+        try {
+            Film result = filmService.create(film);
+            return result;
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
     @PutMapping
-    public Film update(@RequestBody Film film) {
+    public Film update(@Valid @RequestBody Film film) {
         log.info("Получен запрос на обновление фильма: {}", film);
         return filmService.update(film);
     }
