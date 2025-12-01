@@ -19,16 +19,18 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     private static final String FIND_ALL_SQL = "SELECT * FROM users";
     private static final String FIND_BY_ID_SQL = "SELECT * FROM users WHERE id = ?";
     private static final String INSERT_SQL = "INSERT INTO users (email, login, name, birthday) VALUES (?, ?, ?, ?)";
-    private static final String UPDATE_SQL = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE id = ?";
+    private static final String UPDATE_SQL = "UPDATE users SET email = ?, login = ?, name = ?, " +
+            "birthday = ? WHERE id = ?";
     private static final String DELETE_SQL = "DELETE FROM users WHERE id = ?";
     private static final String EXISTS_BY_ID_SQL = "SELECT COUNT(*) FROM users WHERE id = ?";
     private static final String ADD_FRIEND_SQL = "INSERT INTO friends (user_id, friend_id) VALUES (?, ?)";
     private static final String REMOVE_FRIEND_SQL = "DELETE FROM friends WHERE user_id = ? AND friend_id = ?";
-    private static final String FIND_FRIENDS_SQL = "SELECT u.* FROM users u JOIN friends f ON u.id = f.friend_id WHERE f.user_id = ?";
+    private static final String FIND_FRIENDS_SQL = "SELECT u.* FROM users u JOIN friends f ON u.id = f.friend_id " +
+            "WHERE f.user_id = ?";
     private static final String FIND_COMMON_FRIENDS_SQL = """
-            SELECT u.* FROM users u 
-            JOIN friends f1 ON u.id = f1.friend_id 
-            JOIN friends f2 ON u.id = f2.friend_id 
+            SELECT u.* FROM users u
+            JOIN friends f1 ON u.id = f1.friend_id
+            JOIN friends f2 ON u.id = f2.friend_id
             WHERE f1.user_id = ? AND f2.user_id = ?
             """;
 
