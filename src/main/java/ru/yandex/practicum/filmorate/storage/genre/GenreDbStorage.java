@@ -26,12 +26,8 @@ public class GenreDbStorage implements GenreStorage {
 
     @Override
     public Optional<Genre> findById(Long id) {
-        try {
-            Genre genre = jdbcTemplate.queryForObject(FIND_BY_ID_SQL, genreRowMapper, id);
-            return Optional.ofNullable(genre);
-        } catch (Exception e) {
-            return Optional.empty();
-        }
+        List<Genre> result = jdbcTemplate.query(FIND_BY_ID_SQL, genreRowMapper, id);
+        return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
     }
 
     @Override

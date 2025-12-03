@@ -13,6 +13,7 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -47,21 +48,41 @@ public class FilmService {
             mpa = mpaService.getMpaById(film.getMpa().getId());
         }
         film.setMpa(mpa);
+
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-            Set<Genre> validatedGenres = new LinkedHashSet<>();
-            Set<Long> seenIds = new HashSet<>();
+            Set<Long> genreIds = film.getGenres().stream()
+                    .filter(genre -> genre.getId() != null)
+                    .map(Genre::getId)
+                    .collect(Collectors.toSet());
 
-            for (Genre genre : film.getGenres()) {
-                if (genre.getId() != null && !seenIds.contains(genre.getId())) {
-                    Genre fullGenre = genreService.getGenreById(genre.getId());
-                    validatedGenres.add(fullGenre);
-                    seenIds.add(genre.getId());
+            if (!genreIds.isEmpty()) {
+                List<Genre> allGenres = genreService.getAllGenres();
+                Map<Long, Genre> genreMap = allGenres.stream()
+                        .collect(Collectors.toMap(Genre::getId, g -> g));
+
+                for (Long genreId : genreIds) {
+                    if (!genreMap.containsKey(genreId)) {
+                        throw new NotFoundException("Жанр с id=" + genreId + " не найден");
+                    }
                 }
-            }
-            List<Genre> sortedGenres = new ArrayList<>(validatedGenres);
-            sortedGenres.sort(Comparator.comparing(Genre::getId));
 
-            film.setGenres(new LinkedHashSet<>(sortedGenres));
+                Set<Genre> validatedGenres = new LinkedHashSet<>();
+                Set<Long> seenIds = new HashSet<>();
+
+                for (Genre genre : film.getGenres()) {
+                    if (genre.getId() != null && !seenIds.contains(genre.getId())) {
+                        Genre fullGenre = genreMap.get(genre.getId());
+                        validatedGenres.add(fullGenre);
+                        seenIds.add(genre.getId());
+                    }
+                }
+
+                List<Genre> sortedGenres = new ArrayList<>(validatedGenres);
+                sortedGenres.sort(Comparator.comparing(Genre::getId));
+                film.setGenres(new LinkedHashSet<>(sortedGenres));
+            } else {
+                film.setGenres(new LinkedHashSet<>());
+            }
         } else {
             film.setGenres(new LinkedHashSet<>());
         }
@@ -87,14 +108,33 @@ public class FilmService {
             existingFilm.setMpa(newMpa);
         }
         if (film.getGenres() != null) {
-            Set<Genre> validatedGenres = new HashSet<>();
-            for (Genre genre : film.getGenres()) {
-                if (genre.getId() != null) {
-                    Genre fullGenre = genreService.getGenreById(genre.getId());
-                    validatedGenres.add(fullGenre);
+            Set<Long> genreIds = film.getGenres().stream()
+                    .filter(genre -> genre.getId() != null)
+                    .map(Genre::getId)
+                    .collect(Collectors.toSet());
+
+            if (!genreIds.isEmpty()) {
+                List<Genre> allGenres = genreService.getAllGenres();
+                Map<Long, Genre> genreMap = allGenres.stream()
+                        .collect(Collectors.toMap(Genre::getId, g -> g));
+
+                for (Long genreId : genreIds) {
+                    if (!genreMap.containsKey(genreId)) {
+                        throw new NotFoundException("Жанр с id=" + genreId + " не найден");
+                    }
                 }
+
+                Set<Genre> validatedGenres = new LinkedHashSet<>();
+                for (Genre genre : film.getGenres()) {
+                    if (genre.getId() != null) {
+                        Genre fullGenre = genreMap.get(genre.getId());
+                        validatedGenres.add(fullGenre);
+                    }
+                }
+                existingFilm.setGenres(validatedGenres);
+            } else {
+                existingFilm.setGenres(new LinkedHashSet<>());
             }
-            existingFilm.setGenres(validatedGenres);
         }
 
         validateFilm(existingFilm);

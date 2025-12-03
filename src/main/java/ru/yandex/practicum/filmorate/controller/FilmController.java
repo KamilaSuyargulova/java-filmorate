@@ -40,12 +40,7 @@ public class FilmController {
         if (film.getMpa() != null) {
             log.info("MPA id: {}, name: {}", film.getMpa().getId(), film.getMpa().getName());
         }
-        try {
-            Film result = filmService.create(film);
-            return result;
-        } catch (Exception e) {
-            throw e;
-        }
+        return filmService.create(film);
     }
 
     @PutMapping

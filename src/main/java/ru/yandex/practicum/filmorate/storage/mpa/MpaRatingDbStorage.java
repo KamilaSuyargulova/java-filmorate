@@ -26,12 +26,8 @@ public class MpaRatingDbStorage implements MpaRatingStorage {
 
     @Override
     public Optional<MpaRating> findById(Long id) {
-        try {
-            MpaRating mpa = jdbcTemplate.queryForObject(FIND_BY_ID_SQL, mpaRatingRowMapper, id);
-            return Optional.ofNullable(mpa);
-        } catch (Exception e) {
-            return Optional.empty();
-        }
+        List<MpaRating> result = jdbcTemplate.query(FIND_BY_ID_SQL, mpaRatingRowMapper, id);
+        return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
     }
 
     @Override
