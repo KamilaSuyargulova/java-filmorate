@@ -48,44 +48,7 @@ public class FilmService {
             mpa = mpaService.getMpaById(film.getMpa().getId());
         }
         film.setMpa(mpa);
-
-        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-            Set<Long> genreIds = film.getGenres().stream()
-                    .filter(genre -> genre.getId() != null)
-                    .map(Genre::getId)
-                    .collect(Collectors.toSet());
-
-            if (!genreIds.isEmpty()) {
-                List<Genre> allGenres = genreService.getAllGenres();
-                Map<Long, Genre> genreMap = allGenres.stream()
-                        .collect(Collectors.toMap(Genre::getId, g -> g));
-
-                for (Long genreId : genreIds) {
-                    if (!genreMap.containsKey(genreId)) {
-                        throw new NotFoundException("Жанр с id=" + genreId + " не найден");
-                    }
-                }
-
-                Set<Genre> validatedGenres = new LinkedHashSet<>();
-                Set<Long> seenIds = new HashSet<>();
-
-                for (Genre genre : film.getGenres()) {
-                    if (genre.getId() != null && !seenIds.contains(genre.getId())) {
-                        Genre fullGenre = genreMap.get(genre.getId());
-                        validatedGenres.add(fullGenre);
-                        seenIds.add(genre.getId());
-                    }
-                }
-
-                List<Genre> sortedGenres = new ArrayList<>(validatedGenres);
-                sortedGenres.sort(Comparator.comparing(Genre::getId));
-                film.setGenres(new LinkedHashSet<>(sortedGenres));
-            } else {
-                film.setGenres(new LinkedHashSet<>());
-            }
-        } else {
-            film.setGenres(new LinkedHashSet<>());
-        }
+        film.setGenres(validateAndSortGenres(film.getGenres()));
 
         Film created = filmStorage.create(film);
         return created;
@@ -108,37 +71,51 @@ public class FilmService {
             existingFilm.setMpa(newMpa);
         }
         if (film.getGenres() != null) {
-            Set<Long> genreIds = film.getGenres().stream()
-                    .filter(genre -> genre.getId() != null)
-                    .map(Genre::getId)
-                    .collect(Collectors.toSet());
-
-            if (!genreIds.isEmpty()) {
-                List<Genre> allGenres = genreService.getAllGenres();
-                Map<Long, Genre> genreMap = allGenres.stream()
-                        .collect(Collectors.toMap(Genre::getId, g -> g));
-
-                for (Long genreId : genreIds) {
-                    if (!genreMap.containsKey(genreId)) {
-                        throw new NotFoundException("Жанр с id=" + genreId + " не найден");
-                    }
-                }
-
-                Set<Genre> validatedGenres = new LinkedHashSet<>();
-                for (Genre genre : film.getGenres()) {
-                    if (genre.getId() != null) {
-                        Genre fullGenre = genreMap.get(genre.getId());
-                        validatedGenres.add(fullGenre);
-                    }
-                }
-                existingFilm.setGenres(validatedGenres);
-            } else {
-                existingFilm.setGenres(new LinkedHashSet<>());
-            }
+            existingFilm.setGenres(validateAndSortGenres(film.getGenres()));
         }
 
         validateFilm(existingFilm);
         return filmStorage.update(existingFilm);
+    }
+
+    private Set<Genre> validateAndSortGenres(Set<Genre> genres) {
+        if (genres == null || genres.isEmpty()) {
+            return new LinkedHashSet<>();
+        }
+
+        Set<Long> genreIds = genres.stream()
+                .filter(genre -> genre.getId() != null)
+                .map(Genre::getId)
+                .collect(Collectors.toSet());
+
+        if (!genreIds.isEmpty()) {
+            List<Genre> allGenres = genreService.getAllGenres();
+            Map<Long, Genre> genreMap = allGenres.stream()
+                    .collect(Collectors.toMap(Genre::getId, g -> g));
+
+            for (Long genreId : genreIds) {
+                if (!genreMap.containsKey(genreId)) {
+                    throw new NotFoundException("Жанр с id=" + genreId + " не найден");
+                }
+            }
+
+            Set<Genre> validatedGenres = new LinkedHashSet<>();
+            Set<Long> seenIds = new HashSet<>();
+
+            for (Genre genre : genres) {
+                if (genre.getId() != null && !seenIds.contains(genre.getId())) {
+                    Genre fullGenre = genreMap.get(genre.getId());
+                    validatedGenres.add(fullGenre);
+                    seenIds.add(genre.getId());
+                }
+            }
+
+            List<Genre> sortedGenres = new ArrayList<>(validatedGenres);
+            sortedGenres.sort(Comparator.comparing(Genre::getId));
+            return new LinkedHashSet<>(sortedGenres);
+        } else {
+            return new LinkedHashSet<>();
+        }
     }
 
     private void validateFilm(Film film) {

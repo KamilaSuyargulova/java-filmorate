@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -82,36 +83,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
 
     @Override
     public List<Film> findAll() {
-        List<Film> films = jdbcTemplate.query(FIND_ALL_SQL, rs -> {
-            List<Film> result = new ArrayList<>();
-            Map<Long, Film> filmMap = new HashMap<>();
-
-            while (rs.next()) {
-                Long filmId = rs.getLong("id");
-                Film film = filmMap.get(filmId);
-
-                if (film == null) {
-                    film = filmRowMapper.mapRow(rs, rs.getRow());
-
-                    MpaRating mpa = new MpaRating();
-                    mpa.setId(rs.getLong("mpa_id"));
-                    mpa.setName(rs.getString("mpa_name"));
-                    mpa.setDescription(rs.getString("mpa_description"));
-                    film.setMpa(mpa);
-
-                    filmMap.put(filmId, film);
-                    result.add(film);
-                }
-            }
-
-            if (!filmMap.isEmpty()) {
-                loadFilmsData(filmMap);
-            }
-
-            return result;
-        });
-
-        return films;
+        return jdbcTemplate.query(FIND_ALL_SQL, getFilmsWithDataExtractor());
     }
 
     @Override
@@ -154,35 +126,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
 
     @Override
     public Optional<Film> findById(Long id) {
-        List<Film> films = jdbcTemplate.query(FIND_BY_ID_SQL, rs -> {
-            List<Film> result = new ArrayList<>();
-            Map<Long, Film> filmMap = new HashMap<>();
-
-            while (rs.next()) {
-                Long filmId = rs.getLong("id");
-                Film film = filmMap.get(filmId);
-
-                if (film == null) {
-                    film = filmRowMapper.mapRow(rs, rs.getRow());
-
-                    MpaRating mpa = new MpaRating();
-                    mpa.setId(rs.getLong("mpa_id"));
-                    mpa.setName(rs.getString("mpa_name"));
-                    mpa.setDescription(rs.getString("mpa_description"));
-                    film.setMpa(mpa);
-
-                    filmMap.put(filmId, film);
-                    result.add(film);
-                }
-            }
-
-            if (!filmMap.isEmpty()) {
-                loadFilmsData(filmMap);
-            }
-
-            return result;
-        }, id);
-
+        List<Film> films = jdbcTemplate.query(FIND_BY_ID_SQL, getFilmsWithDataExtractor(), id);
         return films.isEmpty() ? Optional.empty() : Optional.of(films.get(0));
     }
 
@@ -211,7 +155,11 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     }
 
     public List<Film> getPopularFilms(int count) {
-        List<Film> films = jdbcTemplate.query(GET_POPULAR_SQL, rs -> {
+        return jdbcTemplate.query(GET_POPULAR_SQL, getFilmsWithDataExtractor(), count);
+    }
+
+    private ResultSetExtractor<List<Film>> getFilmsWithDataExtractor() {
+        return rs -> {
             List<Film> result = new ArrayList<>();
             Map<Long, Film> filmMap = new HashMap<>();
 
@@ -238,9 +186,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             }
 
             return result;
-        }, count);
-
-        return films;
+        };
     }
 
     private void loadFilmsData(Map<Long, Film> filmMap) {
